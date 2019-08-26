@@ -59,11 +59,12 @@ for i, string in enumerate(content):
         string = string.strip()
         if len(string) == 0:
             continue
-        print('https://api.whatsapp.com/send?phone=55' + string)
+        url = 'https://api.whatsapp.com/send?phone=55' + string
+        print(url)
 
         while True:
             try:
-                driver.get('https://api.whatsapp.com/send?phone=' + string)
+                driver.get(url)
                 break
             except UnexpectedAlertPresentException:
                 alert = driver.switch_to.alert
