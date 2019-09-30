@@ -1,3 +1,6 @@
+from os import path
+from sys import exc_info
+
 from selenium import webdriver
 from time import sleep
 
@@ -38,8 +41,9 @@ driver.get('http://web.whatsapp.com')
 # v1.1.2: corrigido erro de alerta de saida da pagina
 # v1.1.3: ignorado linhas vazias
 # v1.1.4: tratamento do alerta do navegador quando a mensagem nao foi enviada antes do proximo numero ser chamado
-# v1.1.5: dicionado hardcoded o DDI do brasil no link e mais logs
-print('v1.1.5')
+# v1.1.5: adicionado hardcoded o DDI do brasil no link e mais logs
+# v1.2.0: adicionado confirmação de 'continuar pela web' ao enviar mensagesn
+print('v1.2.0')
 
 f = open(file='msg.txt', encoding='utf8', mode='r')
 msg = f.readlines()
@@ -59,11 +63,12 @@ for i, string in enumerate(content):
         string = string.strip()
         if len(string) == 0:
             continue
-        print('https://api.whatsapp.com/send?phone=55' + string)
+        url = 'https://api.whatsapp.com/send?phone=55' + string
+        print(url)
 
         while True:
             try:
-                driver.get('https://api.whatsapp.com/send?phone=' + string)
+                driver.get(url)
                 break
             except UnexpectedAlertPresentException:
                 alert = driver.switch_to.alert
@@ -71,8 +76,15 @@ for i, string in enumerate(content):
                 alert.dismiss()
                 sleep(1)
 
-        button = driver.find_element_by_xpath('//*[@id="action-button"]')
+        # send message
+        button = driver.find_element_by_xpath('//a[@id="action-button"]')
         button.click()
+
+        sleep(1)
+        # continuar pela web
+        button = driver.find_element_by_xpath('//a[@class="action__link"]')
+        button.click()
+
         is_wrong = False
         was_sent = False
         stop_when = 0;
@@ -96,10 +108,10 @@ for i, string in enumerate(content):
             is_wrong = False
             raise Exception('Number is not a whats client')
     except Exception as err:
-        exc_type, exc_obj, exc_tb = err.exc_info()
-        print(i + 1, string, exc_type, exc_tb.tb_lineno)
-        # print(i + 1, string, type(err), err)
-        e.write(f'[{datetime.now()}]\t[{i + 1}\t{string}]\t[{type(err)}]\t{err}')
+        exc_type, exc_obj, exc_tb = exc_info()
+        fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(i + 1, string, exc_type, fname, exc_tb.tb_lineno)
+        e.write(f'[{datetime.now()}]\t[{i + 1}\t{string}]\t[{exc_type}]\t[{str(err)}]\t[{fname} ({exc_tb.tb_lineno})]\n')
 
 e.close()
 print('FIM')
