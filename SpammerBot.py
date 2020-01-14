@@ -77,18 +77,9 @@ for i, string in enumerate(content):
                 alert.dismiss()
                 sleep(1)
 
-        # send message
-        button = driver.find_element_by_xpath('//a[@id="action-button"]')
-        button.click()
-
-        sleep(1)
-        # continuar pela web
-        button = driver.find_element_by_xpath('//a[@class="action__link"]')
-        button.click()
-
         is_wrong = False
         was_sent = False
-        stop_when = 0;
+        stop_when = 0
         # continue tentando enquanto nao for numero invalido ou conseguir pegar a caixa de texto
         while not is_wrong and not was_sent:
             stop_when += 1
