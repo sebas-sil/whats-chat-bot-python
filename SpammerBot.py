@@ -43,7 +43,8 @@ driver.get('http://web.whatsapp.com')
 # v1.1.4: tratamento do alerta do navegador quando a mensagem nao foi enviada antes do proximo numero ser chamado
 # v1.1.5: adicionado hardcoded o DDI do brasil no link e mais logs
 # v1.2.0: adicionado confirmação de 'continuar pela web' ao enviar mensagesn
-print('v1.2.0')
+# v1.2.1: Acertado problema de nao carregar a tela de enviar mensagem por uma trava no Whatsapp
+print('v1.2.1')
 
 f = open(file='msg.txt', encoding='utf8', mode='r')
 msg = f.readlines()
@@ -63,7 +64,7 @@ for i, string in enumerate(content):
         string = string.strip()
         if len(string) == 0:
             continue
-        url = 'https://api.whatsapp.com/send?phone=55' + string
+        url = 'https://web.whatsapp.com/send?phone=55' + string
         print(url)
 
         while True:
