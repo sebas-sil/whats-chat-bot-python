@@ -8,8 +8,19 @@ from selenium.common.exceptions import NoSuchElementException, StaleElementRefer
 from selenium.webdriver.common.keys import Keys
 from datetime import datetime
 
+"""
+msg.txt: arquivo texto comum com uma listas de telefones. ex:
+4199887766
+4199876543
+1199223344
+
+mensagens de erro serão gravadas no arquivo log_err.log
+se não for passado um caminho para a imagem, ele enviará o texto, caso contrário enviará a imagem
+"""
+
 
 def get_txt_box():
+    sleep(10)
     ''' pega o text box para envio de mensagem'''
     txt_msg = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[4]/div/footer/div[1]/div[2]/div/div[2]')
     return txt_msg
@@ -44,65 +55,71 @@ driver.get('http://web.whatsapp.com')
 # v1.1.5: adicionado hardcoded o DDI do brasil no link e mais logs
 # v1.2.0: adicionado confirmação de 'continuar pela web' ao enviar mensagesn
 # v1.2.1: Acertado problema de nao carregar a tela de enviar mensagem por uma trava no Whatsapp
-print('v1.2.1')
+# v1.3.0: Adcionado envio de mensagens de imagem
+print('v1.3.0')
 
 f = open(file='msg.txt', encoding='utf8', mode='r')
 msg = f.readlines()
 f.close()
 
-print('Please Scan the QR Code and press enter')
-input()
+# type of message
+img_path = input('Image path: ')
+input('Please Scan the QR Code and press enter')
 
-e = open(file='log_err.txt', encoding='utf8', mode='a')
+e = open(file='log_err.log', encoding='utf8', mode='a')
 
 # read the list of  phone numbers
 f = open('list.txt', 'r')
 content = f.readlines()
-for i, string in enumerate(content):
-    sleep(1)
+
+# para cada numero na lista
+for i, phone in enumerate(content):
     try:
-        string = string.strip()
-        if len(string) == 0:
+        phone = phone.strip()
+        if len(phone) == 0:
             continue
-        url = 'https://web.whatsapp.com/send?phone=55' + string
+        url = 'https://web.whatsapp.com/send?phone=55' + phone
         print(url)
-
-        while True:
-            try:
-                driver.get(url)
-                break
-            except UnexpectedAlertPresentException:
-                alert = driver.switch_to.alert
-                print(alert.text)
-                alert.dismiss()
-                sleep(1)
-
-        # send message
-        button = driver.find_element_by_xpath('//a[@id="action-button"]')
-        button.click()
-
-        sleep(1)
-        # continuar pela web
-        button = driver.find_element_by_xpath('//a[@class="action__link"]')
-        button.click()
+        driver.get(url)
 
         is_wrong = False
         was_sent = False
-        stop_when = 0;
+        stop_when = 0
         # continue tentando enquanto nao for numero invalido ou conseguir pegar a caixa de texto
         while not is_wrong and not was_sent:
             stop_when += 1
             if stop_when > 10:
                 raise Exception('Too many tries')
             try:
-                txt_msg = get_txt_box()
-
-                for message in msg:
-                    txt_msg.send_keys(message.replace('\n', ''))
-                    txt_msg.send_keys(Keys.SHIFT + Keys.ENTER)
-                txt_msg.send_keys(Keys.ENTER)
+                if(len(img_path) == 0):
+                    txt_msg = get_txt_box()
+                    for message in msg:
+                        txt_msg.send_keys(message.replace('\n', ''))
+                        txt_msg.send_keys(Keys.SHIFT + Keys.ENTER)
+                    txt_msg.send_keys(Keys.ENTER)
+                    # tempo necessario para evitar alerta de "deseja sair sem salvar"
+                    sleep(1)
+                else:
+                    # clica no botão de enviar anexo
+                    sleep(1)
+                    inp_img = driver.find_element_by_xpath("//div[@role='button' and @title='Anexar']")
+                    inp_img.click()
+                    # clica no botão enviar imagem
+                    sleep(1)
+                    inp_img = driver.find_elements_by_xpath("//input[@type='file']")[0]
+                    inp_img.send_keys(img_path)
+                    # escreve uam descrição para a imagem
+                    sleep(1)
+                    inp_desc = driver.find_elements_by_xpath("//div[@class='_3u328 copyable-text selectable-text']")[0]
+                    inp_desc.send_keys('Enviado por Unidade Escola UTFPR - Nutrição Esportiva')
+                    # clica em enviar
+                    inp_img = driver.find_element_by_xpath("//span[@data-icon='send-light']")
+                    inp_img.click()
+                    sleep(2)
                 was_sent = True
+
             except NoSuchElementException as err:
+                print(stop_when, 'trying to get the textbox')
                 sleep(1)
                 is_wrong = get_wrong_number()
         if is_wrong:
@@ -111,8 +128,8 @@ for i, string in enumerate(content):
     except Exception as err:
         exc_type, exc_obj, exc_tb = exc_info()
         fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(i + 1, string, exc_type, fname, exc_tb.tb_lineno)
-        e.write(f'[{datetime.now()}]\t[{i + 1}\t{string}]\t[{exc_type}]\t[{str(err)}]\t[{fname} ({exc_tb.tb_lineno})]\n')
+        print(i + 1, phone, exc_type, fname, exc_tb.tb_lineno)
+        e.write(f'[{datetime.now()}]\t[{i + 1}\t{phone}]\t[{exc_type}]\t[{str(err).replace(chr(10), "")}]\t[{fname} ({exc_tb.tb_lineno})]\n')
 
 e.close()
 print('FIM')
