@@ -3,13 +3,16 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 from time import sleep
+# https://docs.python.org/pt-br/dev/library/warnings.html
+import warnings
+warnings.filterwarnings("ignore")
 
 driver = webdriver.Firefox()
 driver.get('http://web.whatsapp.com')
 print('Please Scan the QR Code and press enter')
 input()
 
-week_days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Doming']
+week_days = ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo']
 
 
 def compare(x):
@@ -21,7 +24,13 @@ def compare(x):
 
 try:
     # pega a lista de contatos
-    chats = driver.find_elements_by_xpath('.//div[@class="X7YrQ"]')
+    
+    # WP BUSINESS
+    chats = driver.find_elements_by_xpath('/html/body/div[1]/div/div/div[3]/div/div[2]/div[2]/div/div')
+    
+    # WP
+    # chats = driver.find_elements_by_xpath('.//div[@class="X7YrQ"]')
+    
     # remove os chats não lidos (chats nao lidos tem um marcador númerico)
     chats = [c for c in chats if  not str(c.find_element_by_xpath('./div/div/div[2]/div[2]/div[2]/span').text).isnumeric()]
 
